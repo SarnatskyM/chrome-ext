@@ -8,17 +8,22 @@
   </head>
   <body>
     <div class="wrapper">
-      <div class="header">
+      <header class="header">
         <h1 class="header__title">kvg Tracker</h1>
-        <p class="header__subtitle">Keep track of your tasks</p>
-      </div>
-
-      <div class="main">
-        <ul id="task-list"></ul>
-        <input type="text" id="task-input" placeholder="New task" />
-      </div>
-
-      <button id="add-task">Add Task</button>
+        <p class="header__subtitle">Track your tasks effortlessly</p>
+      </header>
+      <main class="main">
+        <ul id="task-list" class="task-list"></ul>
+        <div class="task-input-wrapper">
+          <input
+            type="text"
+            id="task-input"
+            class="task-input"
+            placeholder="What needs to be done?"
+          />
+          <button id="add-task" class="task-button">+</button>
+        </div>
+      </main>
     </div>
 
     <script src="popup.js"></script>

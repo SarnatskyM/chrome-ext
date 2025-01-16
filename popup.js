@@ -1,100 +1,49 @@
-// Селекторы
-const taskInput = document.getElementById("task-input");
-const taskList = document.getElementById("task-list");
-const addTaskButton = document.getElementById("add-task");
-
 document.addEventListener("DOMContentLoaded", () => {
-  loadTasks();
-  startNotificationLoop();
-});
+  const taskInput = document.getElementById("task-input");
+  const addTaskButton = document.getElementById("add-task");
+  const taskList = document.getElementById("task-list");
 
-// Добавление новой задачи
-addTaskButton.addEventListener("click", () => {
-  if (taskInput.value.trim() !== "") {
-    addTask(taskInput.value.trim(), false);
+  const saveTasks = () => {
+    const tasks = [];
+    taskList.querySelectorAll("li").forEach((taskItem) => {
+      tasks.push(taskItem.querySelector("span").textContent);
+    });
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+  };
+
+  const loadTasks = () => {
+    const savedTasks = JSON.parse(localStorage.getItem("tasks") || "[]");
+    savedTasks.forEach(addTaskToList);
+  };
+
+  const addTaskToList = (taskText) => {
+    const taskItem = document.createElement("li");
+    taskItem.innerHTML = `
+        <span>${taskText}</span>
+        <button class="task-remove">×</button>
+      `;
+    taskList.appendChild(taskItem);
+
+    taskItem.querySelector(".task-remove").addEventListener("click", () => {
+      taskItem.remove();
+      saveTasks();
+    });
+  };
+
+  const addTask = () => {
+    const taskText = taskInput.value.trim();
+    if (!taskText) return;
+
+    addTaskToList(taskText);
     taskInput.value = "";
     saveTasks();
-  }
+  };
+
+  addTaskButton.addEventListener("click", addTask);
+
+  taskInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") addTask();
+  });
+
+  loadTasks();
 });
-
-function addTask(taskText, isCompleted) {
-  const li = document.createElement("li");
-  li.classList.add("task-item");
-  if (isCompleted) li.classList.add("completed");
-
-  li.innerHTML = `
-    <span>${taskText}</span>
-    <div>
-      <button class="toggle-task">${isCompleted ? "✔" : "✖"}</button>
-      <button class="delete-task">&times;</button>
-    </div>
-  `;
-
-  li.querySelector(".toggle-task").addEventListener("click", () => {
-    li.classList.toggle("completed");
-    saveTasks();
-  });
-
-  li.querySelector(".delete-task").addEventListener("click", () => {
-    li.remove();
-    saveTasks();
-  });
-
-  taskList.appendChild(li);
-  sortTasks();
-}
-
-function saveTasks() {
-  const tasks = [];
-  document.querySelectorAll(".task-item").forEach((task) => {
-    tasks.push({
-      text: task.querySelector("span").textContent,
-      completed: task.classList.contains("completed"),
-    });
-  });
-  localStorage.setItem("tasks", JSON.stringify(tasks));
-}
-
-function loadTasks() {
-  const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-  tasks.forEach((task) => addTask(task.text, task.completed));
-}
-
-function sortTasks() {
-  const tasks = Array.from(document.querySelectorAll(".task-item"));
-  tasks.sort((a, b) => {
-    return (
-      a.classList.contains("completed") - b.classList.contains("completed")
-    );
-  });
-  tasks.forEach((task) => taskList.appendChild(task));
-}
-
-function startNotificationLoop() {
-  if (!("Notification" in window)) {
-    console.warn("Уведомления не поддерживаются в этом браузере.");
-    return;
-  }
-
-  if (Notification.permission === "default") {
-    Notification.requestPermission().then((permission) => {
-      if (permission === "granted") {
-        console.log("Уведомления разрешены.");
-      }
-    });
-  }
-
-  setInterval(() => {
-    console.log(1);
-    const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-    const pendingTasks = tasks.filter((task) => !task.completed);
-
-    if (pendingTasks.length > 0 && Notification.permission === "granted") {
-      const taskTexts = pendingTasks.map((task) => `- ${task.text}`).join("\n");
-      new Notification("Напоминание о задачах", {
-        body: `У вас есть ${pendingTasks.length} невыполненных задач:\n${taskTexts}`,
-        icon: "icons/icon-128.png",
-      });
-    }
-  }, 2000);
-}
